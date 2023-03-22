@@ -1,21 +1,21 @@
 <template>
-	<div class="z-50 fixed bottom-0 left-0">
-      <div v-show="!showChatWindow" class="fixed left-4 bottom-4 group">
-        <img class="object-cover w-10 h-10 rounded-full cursor-pointer shadow" src="https://cdn.pixabay.com/photo/2018/01/15/07/51/woman-3083383__340.jpg" alt="username" @click="toggleChatWindow" />
-        <span class="fixed left-16 bottom-8 text-sm text-blue-500 px-2 py-1 rounded-t-md rounded-r-md border border-blue-500 group-hover:bg-blue-500 group-hover:text-white cursor-pointer" @click="toggleChatWindow">How can I help you?</span>
+	<div class="z-50 fixed bottom-0 right-0">
+      <div v-show="!chatVisible" class="fixed right-4 bottom-4 group" @click="showChatWindow">
+        <img class="object-cover w-10 h-10 rounded-full cursor-pointer shadow" :src="settings.assistant.image" alt="username" />
+        <span class="absolute w-3 h-3 bg-green-600 rounded-full left-7 top-0"></span>
+        <span class="fixed right-16 bottom-8 text-sm text-blue-500 px-2 py-1 rounded-t-md rounded-l-md border border-blue-500 group-hover:bg-blue-500 group-hover:text-white cursor-pointer">{{ settings.assistant.messages.intro }}</span>
       </div>
-      <div v-show="showChatWindow" class="sm:w-80 w-full border rounded">
+      <div v-show="chatVisible" class="sm:w-80 w-full border rounded">
         <div>
           <div class="w-full">
             <div class="flex items-start justify-between border-b border-gray-300">
               <div class="relative flex items-center p-3">
                 <img class="object-cover w-10 h-10 rounded-full"
-                  src="https://cdn.pixabay.com/photo/2018/01/15/07/51/woman-3083383__340.jpg" alt="username" />
-                <span class="block ml-2 font-bold text-gray-600">Emma</span>
-                <span class="absolute w-3 h-3 bg-green-600 rounded-full left-10 top-3">
-                </span>
+                  :src="settings.assistant.image" alt="username" />
+                <span class="block ml-2 font-bold text-gray-600">{{ settings.assistant.name }}</span>
+                <span class="absolute w-3 h-3 bg-green-600 rounded-full left-10 top-3"></span>
               </div>
-              <div class="p-3 w-8 h-4 cursor-pointer" @click="toggleChatWindow">
+              <div class="p-3 w-8 h-4 cursor-pointer" @click="hideChatWindow">
                 <svg class="text-gray-600" viewPort="0 0 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg">
                   <line x1="1" y1="11" 
                         x2="11" y2="1" 
@@ -28,33 +28,34 @@
                 </svg>
               </div>
             </div>
-            <div class="relative w-full p-6 overflow-y-auto h-80">
+            <div ref="chatContent" class="relative w-full p-6 overflow-y-auto h-80">
               <ul class="space-y-2">
-                <li class="flex justify-start">
-                  <div class="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
-                    <span class="block">Hi</span>
+                <template v-for="message in messages">
+                  <li v-if="message.role === 'assistant'" class="flex justify-start">
+                    <div class="relative max-w-xl px-4 py-2 text-gray-700 rounded-md shadow text-xs">
+                      <span class="block">{{ message.content }}</span>
+                    </div>
+                  </li>
+                  <li v-if="message.role === 'user'" class="flex justify-end">
+                    <div class="relative max-w-xl px-4 py-2 text-gray-700 bg-gray-100 rounded-md shadow text-xs">
+                      <span class="block">{{ message.content }}</span>
+                    </div>
+                  </li>
+                </template>
+                <li v-if="loading && content" class="flex justify-start">
+                  <div class="relative max-w-xl px-4 py-2 text-gray-700 rounded-md shadow text-xs">
+                    <span class="block">{{ content }}</span>
                   </div>
                 </li>
-                <li class="flex justify-end">
-                  <div class="relative max-w-xl px-4 py-2 text-gray-700 bg-gray-100 rounded shadow">
-                    <span class="block">Hiiii</span>
-                  </div>
-                </li>
-                <li class="flex justify-end">
-                  <div class="relative max-w-xl px-4 py-2 text-gray-700 bg-gray-100 rounded shadow">
-                    <span class="block">how are you?</span>
-                  </div>
-                </li>
-                <li class="flex justify-start">
-                  <div class="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
-                    <span class="block">Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                    </span>
+                <li v-if="finished" class="flex justify-start">
+                  <div class="relative max-w-xl px-4 py-2 text-gray-700 rounded-md shadow text-xs">
+                    <span class="block" v-html="finished"></span>
                   </div>
                 </li>
               </ul>
             </div>
 
-            <div class="flex items-center justify-between w-full p-3 border-t border-gray-300">
+            <div v-if="!finished" class="flex items-center justify-between w-full p-3 border-t border-gray-300">
               <button>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"
                   stroke="currentColor">
@@ -62,10 +63,10 @@
                     d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
               </button>
-              <input type="text" placeholder="Message"
-                class="block w-full py-2 pl-4 mx-3 bg-gray-100 rounded-full outline-none focus:text-gray-700"
-                name="message" required />
-              <button type="submit">
+              <input ref="chatPrompt" type="text" placeholder="Message" :disabled="loading"
+                class="block w-full py-2 px-4 mx-3 bg-gray-100 rounded-full outline-none focus:text-gray-700 text-sm"
+                v-model="input" required @keyup.enter.prevent="addMessage('user', input)" />
+              <button type="submit" @click.prevent="addMessage('user', input)">
                 <svg class="w-5 h-5 text-gray-500 origin-center transform rotate-90" xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20" fill="currentColor">
                   <path
@@ -79,17 +80,116 @@
     </div>
 </template>
 <script>
+let defaultMessages = [
+  { role: "system", content: "Jsi pomocník (ženského pohlaví), který vytváří co nejlepší koučovací otázku. Neposkytuješ rady. Vždy odpovídáš koučovací otázkou." },
+  { role: "assistant", content: "Co aktuálně řešíte? S čím potřebujete pomoci?" },
+];
+import parseJsonStream from './stream.js';
 export default {
   data() {
     return {
-      showChatWindow: false,
+      loading: false,
+      chatVisible: false,
+      finished: false,
+      settings: {
+        limit: 5,
+        client: {
+          api: {
+            url: 'https://openai-client:8443/',
+            key: '',
+            org: '',
+          }
+        },
+        assistant: {
+          name: 'Robo',
+          image: 'https://cdn.pixabay.com/photo/2023/03/05/21/11/ai-generated-7832244_640.jpg',
+          messages: {
+            intro: "Začněte online koučink ZDE",
+            finished: 'To je pro dnes vše. Za domácí úkol mi pošlete odpovědi na tyto otázky na email: <a class="text-blue-500 underline" href="mailto:example@example.org">example@example.org</a>. Pokračovat budeme na koučovacím sezení. Pokud ještě nemáte termín, objednejte se emailem nebo na tel: <a class="text-blue-500 underline" href="tel:123456789">123456789</a>',
+          }
+        },
+      },
+      messages: [...defaultMessages],
+      content: '',
+      input: '',
+    }
+  },
+  computed: {
+    assistantCount() {
+      return this.messages.filter(obj => obj.role === 'assistant').length;
     }
   },
   methods: {
-    toggleChatWindow() {
-      this.showChatWindow = !this.showChatWindow;
-      console.log(this.showChatWindow);
+    parseJsonStream,
+    showChatWindow() {
+      this.chatVisible = true;
+      this.finished = false;
+      this.focusPrompt();
     },
+    focusPrompt() {
+      this.$nextTick(() => {
+         if (!this.finished) this.$refs.chatPrompt.focus();
+      });
+    },
+    hideChatWindow() {
+      this.chatVisible = false;
+      this.messages = [...defaultMessages];
+    },
+    addMessage(role, content) {
+      if (content) {
+        this.messages.push({ role, content });
+        this.input = '';
+        this.focusPrompt();
+        if (!this.loading && role === 'user') this.query();
+        this.scrollDown();
+      }
+    },
+    query() {
+      this.loading = true;
+      fetch(this.settings.client.api.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + this.settings.client.api.key,
+          'OpenAI-Organization': this.settings.client.api.org
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          temperature: 0.8,
+          top_p: 1,
+          n: 1,
+          stream: true,
+          max_tokens: 4096 - JSON.stringify(this.messages).length,
+          messages: this.messages
+        })
+      })
+        .then(async (response) => {
+            this.loading = true;
+            for await (const chunk of this.parseJsonStream(response.body)) {
+                this.model = chunk.model || '';
+                if (!Array.isArray(chunk) && !chunk.choices[0].finish_reason) {
+                    this.content = `${this.content}${chunk.choices[0].delta.content || chunk.choices[0].text || ''}`.trimStart();
+                    this.scrollDown();
+                } else {
+                    this.loading = false;
+                    this.addMessage('assistant', this.content);
+
+                    if (this.assistantCount > 3 && !this.finished) {
+                      this.finished = this.settings.assistant.messages.finished;
+                      this.scrollDown();
+                    }
+
+                    this.content = '';
+                }
+            }
+        })
+        .catch(error => console.error(error));
+    },
+    scrollDown() {
+      this.$nextTick(() => {
+        this.$refs.chatContent.scrollTop = this.$refs.chatContent.scrollHeight;
+      });
+    }
   },
 }
 </script>
