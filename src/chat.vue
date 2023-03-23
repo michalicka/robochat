@@ -1,9 +1,18 @@
 <template>
-	<div class="z-50 fixed bottom-0 right-0">
-      <div v-show="!chatVisible" class="fixed right-4 bottom-4 group" @click="showChatWindow">
+	<div class="z-50 fixed" :class="{
+      'bottom-0 left-0': settings.display.align === 'left',
+      'bottom-0 right-0': settings.display.align === 'right',
+    }">
+      <div v-show="!chatVisible" class="fixed group" :class="{
+          'left-4 bottom-4': settings.display.align === 'left',
+          'right-4 bottom-4': settings.display.align === 'right',
+        }" @click="showChatWindow">
         <img class="object-cover w-10 h-10 rounded-full cursor-pointer shadow" :src="settings.assistant.image" alt="username" />
         <span class="absolute w-3 h-3 bg-green-600 rounded-full left-7 top-0"></span>
-        <span class="fixed right-16 bottom-8 text-sm text-blue-500 px-2 py-1 rounded-t-md rounded-l-md border border-blue-500 group-hover:bg-blue-500 group-hover:text-white cursor-pointer">{{ settings.assistant.messages.intro }}</span>
+        <span class="fixed text-sm text-blue-500 px-2 py-1 rounded-t-md border border-blue-500 group-hover:bg-blue-500 group-hover:text-white cursor-pointer" :class="{
+            'left-16 bottom-8 rounded-r-md': settings.display.align === 'left',
+            'right-16 bottom-8 rounded-l-md': settings.display.align === 'right',
+          }">{{ settings.assistant.messages.intro }}</span>
       </div>
       <div v-show="chatVisible" class="sm:w-80 w-full border rounded">
         <div>
@@ -56,14 +65,14 @@
             </div>
 
             <div v-if="!finished" class="flex items-center justify-between w-full p-3 border-t border-gray-300">
-              <button>
+              <button v-if="false">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"
                   stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
               </button>
-              <input ref="chatPrompt" type="text" placeholder="Message" :disabled="loading"
+              <input ref="chatPrompt" type="text" :disabled="loading"
                 class="block w-full py-2 px-4 mx-3 bg-gray-100 rounded-full outline-none focus:text-gray-700 text-sm"
                 v-model="input" required @keyup.enter.prevent="addMessage('user', input)" />
               <button type="submit" @click.prevent="addMessage('user', input)">
@@ -82,7 +91,7 @@
 <script>
 let defaultMessages = [
   { role: "system", content: "Jsi pomocník (ženského pohlaví), který vytváří co nejlepší koučovací otázku. Neposkytuješ rady. Vždy odpovídáš koučovací otázkou." },
-  { role: "assistant", content: "Co aktuálně řešíte? S čím potřebujete pomoci?" },
+  { role: "assistant", content: "Co aktuálně řešíte? S čím chcete pomoci?" },
 ];
 import parseJsonStream from './stream.js';
 export default {
@@ -92,7 +101,9 @@ export default {
       chatVisible: false,
       finished: false,
       settings: {
-        limit: 5,
+        display: {
+          align: 'right',
+        },
         client: {
           api: {
             url: 'https://openai-client:8443/',
@@ -103,9 +114,10 @@ export default {
         assistant: {
           name: 'Robo',
           image: 'https://cdn.pixabay.com/photo/2023/03/05/21/11/ai-generated-7832244_640.jpg',
+          limit: 5,
           messages: {
             intro: "Začněte online koučink ZDE",
-            finished: 'To je pro dnes vše. Za domácí úkol mi pošlete odpovědi na tyto otázky na email: <a class="text-blue-500 underline" href="mailto:example@example.org">example@example.org</a>. Pokračovat budeme na koučovacím sezení. Pokud ještě nemáte termín, objednejte se emailem nebo na tel: <a class="text-blue-500 underline" href="tel:123456789">123456789</a>',
+            finished: 'To je pro dnes vše. Za domácí úkol mi pošlete odpovědi na tyto otázky na email: <a class="text-blue-500 underline" href="mailto:example@example.org?subject=Domácí%20úkol&body={body}">example@example.org</a>. Pokračovat budeme na koučovacím sezení. Pokud ještě nemáte termín, objednejte se emailem nebo na tel: <a class="text-blue-500 underline" href="tel:123456789">123456789</a>',
           }
         },
       },
@@ -117,11 +129,12 @@ export default {
   computed: {
     assistantCount() {
       return this.messages.filter(obj => obj.role === 'assistant').length;
-    }
+    },
   },
   methods: {
     parseJsonStream,
     showChatWindow() {
+      this.loading = false;
       this.chatVisible = true;
       this.finished = false;
       this.focusPrompt();
@@ -173,9 +186,15 @@ export default {
                 } else {
                     this.loading = false;
                     this.addMessage('assistant', this.content);
-
-                    if (this.assistantCount > 3 && !this.finished) {
-                      this.finished = this.settings.assistant.messages.finished;
+                    if (this.settings.assistant.limit && (this.assistantCount > this.settings.assistant.limit) && !this.finished) {
+                      this.finished = this.settings.assistant.messages.finished.replace(
+                        '{body}', 
+                        encodeURIComponent(this.messages
+                          .filter(obj => obj.role !== 'system')
+                          .map(message => message.content)
+                          .join('\r\n\r\n')
+                        )
+                      );
                       this.scrollDown();
                     }
 
@@ -183,7 +202,11 @@ export default {
                 }
             }
         })
-        .catch(error => console.error(error));
+        .catch(error => {
+          console.error(error);
+          this.addMessage('assistant', `Chyba: ${error.message}. Zkuste to později.`);
+          this.loading = false;
+        });
     },
     scrollDown() {
       this.$nextTick(() => {
