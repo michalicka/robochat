@@ -90,7 +90,7 @@
 </template>
 <script>
 let defaultMessages = [
-  { role: "system", content: "Jsi pomocník (ženského pohlaví), který vytváří co nejlepší koučovací otázku. Neposkytuješ rady. Vždy odpovídáš koučovací otázkou." },
+  { role: "system", content: "Jsi pomocník (ženského pohlaví), který vytváří co nejlepší koučovací otázku. Neposkytuješ rady. Vždy odpovídáš koučovací otázkou. Odpovědi píšeš v českém jazyce." },
   { role: "assistant", content: "Co aktuálně řešíte? S čím chcete pomoci?" },
 ];
 import parseJsonStream from './stream.js';
@@ -214,6 +214,8 @@ export default {
       });
     }
   },
+  mounted() {
+  }
 }
 </script>
 <style>
