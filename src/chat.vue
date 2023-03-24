@@ -1,5 +1,5 @@
 <template>
-	<div v-if="settings.display.enabled" class="z-50 fixed" :class="{
+	<div v-if="settings.display.enabled" class="z-50 fixed bg-white" :class="{
       'bottom-0 left-0': settings.display.align === 'left',
       'bottom-0 right-0': settings.display.align === 'right',
     }">
@@ -9,15 +9,15 @@
         }" @click="showChatWindow">
         <img class="object-cover w-10 h-10 rounded-full cursor-pointer shadow" :src="settings.assistant.image" alt="username" />
         <span class="absolute w-3 h-3 bg-green-600 rounded-full left-7 top-0"></span>
-        <span class="fixed text-sm text-blue-500 px-2 py-1 rounded-t-md border border-blue-500 group-hover:bg-blue-500 group-hover:text-white cursor-pointer" :class="{
+        <span class="fixed text-sm text-blue-500 px-2 py-1 rounded-t-md border border-solid border-blue-500 group-hover:bg-blue-500 group-hover:text-white bg-white cursor-pointer" :class="{
             'left-16 bottom-8 rounded-r-md': settings.display.align === 'left',
             'right-16 bottom-8 rounded-l-md': settings.display.align === 'right',
           }">{{ settings.assistant.messages.intro }}</span>
       </div>
-      <div v-show="chatVisible" class="sm:w-80 w-full border rounded">
+      <div v-show="chatVisible" class="sm:w-80 w-full border border-solid border-gray-300 rounded">
         <div>
           <div class="w-full">
-            <div class="flex items-start justify-between border-b border-gray-300">
+            <div class="flex items-start justify-between border-b border-solid border-gray-300">
               <div class="relative flex items-center p-3">
                 <img class="object-cover w-10 h-10 rounded-full"
                   :src="settings.assistant.image" alt="username" />
@@ -64,7 +64,7 @@
               </ul>
             </div>
 
-            <div v-if="!finished" class="flex items-center justify-between w-full p-3 border-t border-gray-300">
+            <div v-if="!finished" class="flex items-center justify-between w-full p-3 border-t border-solid border-gray-300">
               <button v-if="false">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"
                   stroke="currentColor">
