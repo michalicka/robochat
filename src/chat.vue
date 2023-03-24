@@ -1,5 +1,5 @@
 <template>
-	<div class="z-50 fixed" :class="{
+	<div v-if="settings.display.enabled" class="z-50 fixed" :class="{
       'bottom-0 left-0': settings.display.align === 'left',
       'bottom-0 right-0': settings.display.align === 'right',
     }">
@@ -89,10 +89,6 @@
     </div>
 </template>
 <script>
-let defaultMessages = [
-  { role: "system", content: "Jsi pomocník (ženského pohlaví), který vytváří co nejlepší koučovací otázku. Neposkytuješ rady. Vždy odpovídáš koučovací otázkou. Odpovědi píšeš v českém jazyce." },
-  { role: "assistant", content: "Co aktuálně řešíte? S čím chcete pomoci?" },
-];
 import parseJsonStream from './stream.js';
 export default {
   data() {
@@ -102,26 +98,10 @@ export default {
       finished: false,
       settings: {
         display: {
-          align: 'right',
-        },
-        client: {
-          api: {
-            url: 'https://openai-client:8443/',
-            key: '',
-            org: '',
-          }
-        },
-        assistant: {
-          name: 'Robo',
-          image: 'https://cdn.pixabay.com/photo/2023/03/05/21/11/ai-generated-7832244_640.jpg',
-          limit: 5,
-          messages: {
-            intro: "Začněte online koučink ZDE",
-            finished: 'To je pro dnes vše. Za domácí úkol mi pošlete odpovědi na tyto otázky na email: <a class="text-blue-500 underline" href="mailto:example@example.org?subject=Domácí%20úkol&body={body}">example@example.org</a>. Pokračovat budeme na koučovacím sezení. Pokud ještě nemáte termín, objednejte se emailem nebo na tel: <a class="text-blue-500 underline" href="tel:123456789">123456789</a>',
-          }
+          enabled: false,
         },
       },
-      messages: [...defaultMessages],
+      messages: [],
       content: '',
       input: '',
     }
@@ -130,10 +110,17 @@ export default {
     assistantCount() {
       return this.messages.filter(obj => obj.role === 'assistant').length;
     },
+    defaultMessages() {
+      return [
+        { role: "system", content: this.settings.assistant.messages.system },
+        { role: "assistant", content: this.settings.assistant.messages.first },
+      ];
+    }
   },
   methods: {
     parseJsonStream,
     showChatWindow() {
+      this.messages = [...this.defaultMessages];
       this.loading = false;
       this.chatVisible = true;
       this.finished = false;
@@ -146,7 +133,6 @@ export default {
     },
     hideChatWindow() {
       this.chatVisible = false;
-      this.messages = [...defaultMessages];
     },
     addMessage(role, content) {
       if (content) {
@@ -204,7 +190,7 @@ export default {
         })
         .catch(error => {
           console.error(error);
-          this.addMessage('assistant', `Chyba: ${error.message}. Zkuste to později.`);
+          this.addMessage('assistant', error.message);
           this.loading = false;
         });
     },
@@ -212,9 +198,22 @@ export default {
       this.$nextTick(() => {
         this.$refs.chatContent.scrollTop = this.$refs.chatContent.scrollHeight;
       });
+    },
+    loadConfig() {
+      const match = document.documentElement.outerHTML.match(/src="(.*?)robochat.min.js(.*?)"/i);
+      const path = match ? match[1] : '';
+      console.log(path);
+      fetch(path + 'api.php?action=rbch_config')
+        .then(response => response.json())
+        .then(data => {
+          this.settings = data;
+          console.log(this.settings);
+        })
+        .catch(error => console.error('Error fetching config:', error));
     }
   },
   mounted() {
+    this.loadConfig();
   }
 }
 </script>

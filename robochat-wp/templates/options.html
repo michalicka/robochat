@@ -1,0 +1,71 @@
+<div class="wrap">
+<h2>RoboChat Options</h2>
+<form method="post" action="options.php">
+<input type="hidden" id="_wpnonce" name="_wpnonce" value="{{ _wpnonce }}" />
+<table class="form-table">
+    <tr valign="top">
+        <th scope="row">Plugin Enabled</th>
+        <td><select name="rbch_display_enabled">
+            <option value="1" {{ rbch_display_enabled_1 }} >Yes</option>
+            <option value="0" {{ rbch_display_enabled_0 }} >No</option>
+        </select></td>
+    </tr>
+    <tr valign="top">
+        <th scope="row">Align</th>
+        <td><select name="rbch_display_align">
+            <option value="left" {{ rbch_display_align_left }} >left</option>
+            <option value="right" {{ rbch_display_align_right }} >right</option>
+        </select></td>
+    </tr>
+    <tr valign="top"><td colspan="2"><h3>API:</h3></td></tr>
+    <tr valign="top">
+        <th scope="row">API Url</th>
+        <td><input type="text" name="rbch_client_api_url" style="width: 600px;" value="{{ rbch_client_api_url }}"></td>
+    </tr>
+    <tr valign="top">
+        <th scope="row">API Key</th>
+        <td><input type="text" name="rbch_client_api_key" style="width: 600px;" value="{{ rbch_client_api_key }}"></td>
+    </tr>
+    <tr valign="top">
+        <th scope="row">API Organization</th>
+        <td><input type="text" name="rbch_client_api_org" style="width: 600px;" value="{{ rbch_client_api_org }}"></td>
+    </tr>
+    <tr valign="top"><td colspan="2"><h3>Assistant:</h3></td></tr>
+    <tr valign="top">
+        <th scope="row">Name</th>
+        <td><input type="text" name="rbch_assistant_name" style="width: 200px;" value="{{ rbch_assistant_name }}"></td>
+    </tr>
+    <tr valign="top">
+        <th scope="row">Image</th>
+        <td><input type="text" name="rbch_assistant_image" style="width: 600px;" value="{{ rbch_assistant_image }}"></td>
+    </tr>
+    <tr valign="top">
+        <th scope="row">Limit</th>
+        <td><input type="number" name="rbch_assistant_limit" style="width: 100px;" value="{{ rbch_assistant_limit }}"></td>
+    </tr>
+    <tr valign="top"><td colspan="2"><h3>Assistant Messages:</h3></td></tr>
+    <tr valign="top">
+        <th scope="row">Intro</th>
+        <td><input type="text" name="rbch_assistant_messages_intro" style="width: 600px;" value="{{ rbch_assistant_messages_intro }}"></td>
+    </tr>
+    <tr valign="top">
+        <th scope="row">System</th>
+        <td><textarea name="rbch_assistant_messages_system" style="width: 600px;" rows="5">{{ rbch_assistant_messages_system }}</textarea></td>
+    </tr>
+    <tr valign="top">
+        <th scope="row">First</th>
+        <td><input type="text" name="rbch_assistant_messages_first" style="width: 600px;" value="{{ rbch_assistant_messages_first }}"></td>
+    </tr>
+    <tr valign="top">
+        <th scope="row">Finished</th>
+        <td><textarea name="rbch_assistant_messages_finished" style="width: 600px;" rows="5">{{ rbch_assistant_messages_finished }}</textarea></td>
+    </tr>
+</table>
+<input type="hidden" name="action" value="update" />
+<input type="hidden" name="page_options" value="rbch_display_enabled,rbch_display_align,rbch_client_api_url,rbch_client_api_key,rbch_client_api_org,rbch_assistant_name,rbch_assistant_image,rbch_assistant_limit,rbch_assistant_messages_intro,rbch_assistant_messages_system,rbch_assistant_messages_first,rbch_assistant_messages_finished" />
+
+<p class="submit">
+<input type="submit" name="Submit" value="{{ submit_label }}" />
+</p>
+</form>
+</div>

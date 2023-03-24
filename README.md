@@ -1,14 +1,15 @@
 # RoboChat
 
-AI powered chat assistant
+AI powered chat assistant with Wordpress plugin
 
 ## Installation
 
 - Download
 - Run `npm install`
 - Run `npm build`
+- Copy generated `robochat-wp` folder to `wp-content/plugins/` folder
+- Activate plugin **RoboChat** in your Wordpress administration
 
 ## Usage
 
-- Copy `dist` folder to your web server
-- Add JS scripts to your web page
+- Navigate to the **Options > RoboChat** to update settings.

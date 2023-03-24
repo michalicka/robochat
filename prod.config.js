@@ -6,8 +6,8 @@ module.exports = {
   mode: 'production',
   entry: './src/chat.js',
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'chat.min.js',
+    path: path.resolve(__dirname, 'robochat-wp'),
+    filename: 'robochat.min.js',
   },
   module: {
     rules: [
